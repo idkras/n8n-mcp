@@ -427,6 +427,7 @@ class N8NDocumentationMCPServer {
                     description: tool.description
                 });
             });
+            ui_1.UIAppRegistry.injectToolMeta(tools);
             return { tools };
         });
         this.server.setRequestHandler(types_js_1.CallToolRequestSchema, async (request) => {
@@ -529,10 +530,6 @@ class N8NDocumentationMCPServer {
                 if (name.startsWith('validate_') && structuredContent !== null) {
                     mcpResponse.structuredContent = structuredContent;
                 }
-                const uiApp = ui_1.UIAppRegistry.getAppForTool(name);
-                if (uiApp && uiApp.html) {
-                    mcpResponse._meta = { ui: { app: uiApp.config.uri } };
-                }
                 return mcpResponse;
             }
             catch (error) {
@@ -585,7 +582,7 @@ class N8NDocumentationMCPServer {
         });
         this.server.setRequestHandler(types_js_1.ReadResourceRequestSchema, async (request) => {
             const uri = request.params.uri;
-            const match = uri.match(/^n8n-mcp:\/\/ui\/(.+)$/);
+            const match = uri.match(/^ui:\/\/n8n-mcp\/(.+)$/);
             if (!match) {
                 throw new Error(`Unknown resource URI: ${uri}`);
             }

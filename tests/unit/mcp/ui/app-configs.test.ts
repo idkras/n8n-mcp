@@ -98,8 +98,29 @@ describe('UI_APP_CONFIGS', () => {
     expect(config!.toolPatterns).toContain('n8n_validate_workflow');
   });
 
-  it('should have exactly 2 configs', () => {
-    expect(UI_APP_CONFIGS.length).toBe(2);
+  it('should have exactly 5 configs', () => {
+    expect(UI_APP_CONFIGS.length).toBe(5);
+  });
+
+  it('should contain the workflow-list config', () => {
+    const config = UI_APP_CONFIGS.find(c => c.id === 'workflow-list');
+    expect(config).toBeDefined();
+    expect(config!.displayName).toBe('Workflow List');
+    expect(config!.toolPatterns).toContain('n8n_list_workflows');
+  });
+
+  it('should contain the execution-history config', () => {
+    const config = UI_APP_CONFIGS.find(c => c.id === 'execution-history');
+    expect(config).toBeDefined();
+    expect(config!.displayName).toBe('Execution History');
+    expect(config!.toolPatterns).toContain('n8n_executions');
+  });
+
+  it('should contain the health-dashboard config', () => {
+    const config = UI_APP_CONFIGS.find(c => c.id === 'health-dashboard');
+    expect(config).toBeDefined();
+    expect(config!.displayName).toBe('Health Dashboard');
+    expect(config!.toolPatterns).toContain('n8n_health_check');
   });
 
   it('should have IDs that are valid URI path segments (no spaces or special chars)', () => {

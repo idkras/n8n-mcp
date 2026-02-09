@@ -30,6 +30,11 @@ export interface ToolDefinition {
         additionalProperties?: boolean | Record<string, any>;
     };
     annotations?: ToolAnnotations;
+    _meta?: {
+        ui?: {
+            resourceUri?: string;
+        };
+    };
 }
 export interface ResourceDefinition {
     uri: string;
