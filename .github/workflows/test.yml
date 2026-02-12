@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10  # Add a 10-minute timeout to prevent hanging
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - uses: actions/setup-node@v4
         with:
@@ -255,7 +255,7 @@ jobs:
       checks: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       # Download all artifacts
       - name: Download all artifacts

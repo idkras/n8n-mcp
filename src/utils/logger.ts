@@ -17,7 +17,10 @@ export class Logger {
   private useFileLogging = false;
   private fileStream: any = null;
   // Cache environment variables for performance
-  private readonly isStdio = process.env.MCP_MODE === 'stdio';
+  // CRITICAL: Default mode is stdio (see index.ts). When MCP_MODE is not set,
+  // we MUST suppress console output to avoid corrupting JSON-RPC stream on stdout.
+  // Only allow console output when MCP_MODE is explicitly set to 'http'.
+  private readonly isStdio = !process.env.MCP_MODE || process.env.MCP_MODE === 'stdio';
   private readonly isDisabled = process.env.DISABLE_CONSOLE_OUTPUT === 'true';
   private readonly isHttp = process.env.MCP_MODE === 'http';
   private readonly isTest = process.env.NODE_ENV === 'test' || process.env.TEST_ENVIRONMENT === 'true';
@@ -56,13 +59,16 @@ export class Logger {
   }
 
   private log(level: LogLevel, levelName: string, message: string, ...args: any[]): void {
+    // In stdio mode, suppress ALL console output to avoid corrupting JSON-RPC
+    if (this.isStdio || this.isDisabled) {
+      return;
+    }
+    
     // Allow ERROR level logs through in more cases for debugging
     const allowErrorLogs = level === LogLevel.ERROR && (this.isHttp || process.env.DEBUG === 'true');
     
-    // Check environment variables FIRST, before level check
-    // In stdio mode, suppress ALL console output to avoid corrupting JSON-RPC (except errors when debugging)
     // Also suppress in test mode unless debug is explicitly enabled
-    if (this.isStdio || this.isDisabled || (this.isTest && process.env.DEBUG !== 'true')) {
+    if (this.isTest && process.env.DEBUG !== 'true') {
       // Allow error logs through if debugging is enabled
       if (!allowErrorLogs) {
         return;

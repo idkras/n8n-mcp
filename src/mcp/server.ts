@@ -235,12 +235,21 @@ export class N8NDocumentationMCPServer {
       // Log validation tools' input schemas for debugging
       const validationTools = tools.filter(t => t.name.startsWith('validate_'));
       validationTools.forEach(tool => {
-        logger.info('Validation tool schema', {
-          toolName: tool.name,
-          inputSchema: JSON.stringify(tool.inputSchema, null, 2),
-          hasOutputSchema: !!tool.outputSchema,
-          description: tool.description
-        });
+        try {
+          logger.info('Validation tool schema', {
+            toolName: tool.name,
+            inputSchema: JSON.stringify(tool.inputSchema, null, 2),
+            hasOutputSchema: !!tool.outputSchema,
+            description: tool.description
+          });
+        } catch (error) {
+          logger.warn('Failed to serialize tool schema', {
+            toolName: tool.name,
+            error: error instanceof Error ? error.message : String(error),
+            hasOutputSchema: !!tool.outputSchema,
+            description: tool.description
+          });
+        }
       });
       
       return { tools };

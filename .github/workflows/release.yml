@@ -33,7 +33,7 @@ jobs:
       is-prerelease: ${{ steps.check.outputs.is-prerelease }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 2
       
@@ -89,7 +89,7 @@ jobs:
       has-notes: ${{ steps.extract.outputs.has-notes }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Extract changelog for version
         id: extract
@@ -132,7 +132,7 @@ jobs:
       upload-url: ${{ steps.create.outputs.upload_url }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Create Git Tag
         run: |
@@ -213,7 +213,7 @@ jobs:
     if: needs.detect-version-change.outputs.version-changed == 'true'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -245,7 +245,7 @@ jobs:
     if: needs.detect-version-change.outputs.version-changed == 'true'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -331,7 +331,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           lfs: true
       
@@ -413,7 +413,7 @@ jobs:
     if: needs.detect-version-change.outputs.version-changed == 'true' && !failure()
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       
