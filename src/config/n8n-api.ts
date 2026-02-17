@@ -36,10 +36,7 @@ function getKeychainCredential(key: string): string | null {
   };
 
   if (key === 'N8N_API_KEY') {
-    const fromIkcursor = tryEntry(N8N_KEYCHAIN_SERVICE, N8N_KEYCHAIN_ACCOUNT);
-    if (fromIkcursor) return fromIkcursor;
-    const fromLegacy = tryEntry('N8N_API_KEY');
-    return fromLegacy;
+    return tryEntry(N8N_KEYCHAIN_SERVICE, N8N_KEYCHAIN_ACCOUNT);
   }
 
   try {
@@ -70,21 +67,25 @@ export function getN8nApiConfig() {
   
   const config = result.data;
   
-  // Get API URL
+  // Get API URL (default flow.rick.ai so only N8N_API_KEY is required from wrapper/Keychain)
+  const DEFAULT_N8N_API_URL = 'https://flow.rick.ai';
   let apiUrl = config.N8N_API_URL;
   if (!apiUrl) {
-    apiUrl = getKeychainCredential('N8N_API_URL') || undefined;
+    apiUrl = getKeychainCredential('N8N_API_URL') || DEFAULT_N8N_API_URL;
   }
-  
-  // Get API Key
+  if (!apiUrl) {
+    apiUrl = DEFAULT_N8N_API_URL;
+  }
+
+  // Get API Key (Keychain: "IK Cursor n8n flow.rick.ai" / account "IK Cursor")
   let apiKey = config.N8N_API_KEY;
   if (!apiKey || apiKey === 'from_keychain') {
     apiKey = getKeychainCredential('N8N_API_KEY') || undefined;
   }
-  
-  // Check if both URL and API key are provided
-  if (!apiUrl || !apiKey) {
-    logger.debug('N8N API not configured: missing URL or API key');
+
+  // Require only API key; URL has default
+  if (!apiKey) {
+    logger.debug('N8N API not configured: missing API key');
     return null;
   }
   
