@@ -30,6 +30,7 @@ export declare class N8NDocumentationMCPServer {
     private validateToolParams;
     private validateToolParamsBasic;
     private validateExtractedArgs;
+    private coerceStringifiedJsonParams;
     private listNodes;
     private getNodeInfo;
     private searchNodes;

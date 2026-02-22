@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.35.5] - 2026-02-22
+
+### Fixed
+
+- **Comprehensive parameter type coercion for Claude Desktop / Claude.ai** (Issue #605): Expanded the v2.35.4 fix to handle ALL type mismatches, not just stringified objects/arrays. Testing revealed 6/9 tools still failing in Claude Desktop after the initial fix.
+  - Extended `coerceStringifiedJsonParams()` to coerce every schema type: `string→number`, `string→boolean`, `number→string`, `boolean→string` (in addition to existing `string→object` and `string→array`)
+  - Added top-level safeguard to parse the entire `args` object if it arrives as a JSON string
+  - Added `[Diagnostic]` section to error responses showing received argument types, enabling users to report exactly what their MCP client sends
+  - Added 9 new unit tests (24 total) covering number, boolean, and number-to-string coercion
+
+Conceived by Romuald Czlonkowski - https://www.aiadvisors.pl/en
+
 ## [2.35.4] - 2026-02-20
 
 ### Fixed

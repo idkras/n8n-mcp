@@ -163,6 +163,85 @@ describe('coerceStringifiedJsonParams', () => {
     });
   });
 
+  describe('Number coercion', () => {
+    it('should coerce string to number for search_nodes limit', () => {
+      const args = {
+        query: 'webhook',
+        limit: '10'
+      };
+      const result = server.testCoerceStringifiedJsonParams('search_nodes', args);
+      expect(result.limit).toBe(10);
+      expect(result.query).toBe('webhook');
+    });
+
+    it('should coerce string to number for n8n_executions limit', () => {
+      const args = {
+        action: 'list',
+        limit: '50'
+      };
+      const result = server.testCoerceStringifiedJsonParams('n8n_executions', args);
+      expect(result.limit).toBe(50);
+    });
+
+    it('should not coerce non-numeric string to number', () => {
+      const args = {
+        query: 'webhook',
+        limit: 'abc'
+      };
+      const result = server.testCoerceStringifiedJsonParams('search_nodes', args);
+      expect(result.limit).toBe('abc');
+    });
+  });
+
+  describe('Boolean coercion', () => {
+    it('should coerce "true" string to boolean', () => {
+      const args = {
+        query: 'webhook',
+        includeExamples: 'true'
+      };
+      const result = server.testCoerceStringifiedJsonParams('search_nodes', args);
+      expect(result.includeExamples).toBe(true);
+    });
+
+    it('should coerce "false" string to boolean', () => {
+      const args = {
+        query: 'webhook',
+        includeExamples: 'false'
+      };
+      const result = server.testCoerceStringifiedJsonParams('search_nodes', args);
+      expect(result.includeExamples).toBe(false);
+    });
+
+    it('should not coerce non-boolean string to boolean', () => {
+      const args = {
+        query: 'webhook',
+        includeExamples: 'yes'
+      };
+      const result = server.testCoerceStringifiedJsonParams('search_nodes', args);
+      expect(result.includeExamples).toBe('yes');
+    });
+  });
+
+  describe('Number-to-string coercion', () => {
+    it('should coerce number to string for n8n_get_workflow id', () => {
+      const args = {
+        id: 123,
+        mode: 'minimal'
+      };
+      const result = server.testCoerceStringifiedJsonParams('n8n_get_workflow', args);
+      expect(result.id).toBe('123');
+      expect(result.mode).toBe('minimal');
+    });
+
+    it('should coerce boolean to string when string expected', () => {
+      const args = {
+        id: true
+      };
+      const result = server.testCoerceStringifiedJsonParams('n8n_get_workflow', args);
+      expect(result.id).toBe('true');
+    });
+  });
+
   describe('End-to-end Claude Desktop scenario', () => {
     it('should coerce all stringified params for n8n_create_workflow', () => {
       const nodes = [
@@ -202,6 +281,20 @@ describe('coerceStringifiedJsonParams', () => {
       expect(result.nodes).toEqual(nodes);
       expect(result.connections).toEqual(connections);
       expect(result.settings).toEqual(settings);
+    });
+
+    it('should handle mixed type mismatches from Claude Desktop', () => {
+      // Simulate Claude Desktop sending object params as strings
+      const args = {
+        nodeType: 'nodes-base.httpRequest',
+        config: '{"method":"GET","url":"https://example.com"}',
+        mode: 'full',
+        profile: 'ai-friendly'
+      };
+      const result = server.testCoerceStringifiedJsonParams('validate_node', args);
+      expect(result.config).toEqual({ method: 'GET', url: 'https://example.com' });
+      expect(result.nodeType).toBe('nodes-base.httpRequest');
+      expect(result.mode).toBe('full');
     });
   });
 });

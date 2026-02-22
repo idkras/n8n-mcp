@@ -687,9 +687,23 @@ export class N8NDocumentationMCPServer {
         };
       }
 
+      // Safeguard: if the entire args object arrives as a JSON string, parse it.
+      // Some MCP clients may serialize the arguments object itself.
+      let processedArgs: Record<string, any> | undefined = args;
+      if (typeof args === 'string') {
+        try {
+          const parsed = JSON.parse(args as unknown as string);
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            processedArgs = parsed;
+            logger.warn(`Coerced stringified args object for tool "${name}"`);
+          }
+        } catch {
+          logger.warn(`Tool "${name}" received string args that are not valid JSON`);
+        }
+      }
+
       // Workaround for n8n's nested output bug
       // Check if args contains nested 'output' structure from n8n's memory corruption
-      let processedArgs = args;
       if (args && typeof args === 'object' && 'output' in args) {
         try {
           const possibleNestedData = args.output;
@@ -721,9 +735,10 @@ export class N8NDocumentationMCPServer {
         }
       }
 
-      // Workaround for Claude Desktop 1.1.3189 string serialization bug.
-      // The MCP client serializes object/array parameters as JSON strings.
-      // Use the tool's inputSchema to detect and parse them back.
+      // Workaround for Claude Desktop / Claude.ai MCP client bugs that
+      // serialize parameters with wrong types. Coerces ALL mismatched types
+      // (string↔object, string↔number, string↔boolean, etc.) using the
+      // tool's inputSchema as the source of truth.
       processedArgs = this.coerceStringifiedJsonParams(name, processedArgs);
 
       try {
@@ -813,7 +828,7 @@ export class N8NDocumentationMCPServer {
 
         // Provide more helpful error messages for common n8n issues
         let helpfulMessage = `Error executing tool ${name}: ${errorMessage}`;
-        
+
         if (errorMessage.includes('required') || errorMessage.includes('missing')) {
           helpfulMessage += '\n\nNote: This error often occurs when the AI agent sends incomplete or incorrectly formatted parameters. Please ensure all required fields are provided with the correct types.';
         } else if (errorMessage.includes('type') || errorMessage.includes('expected')) {
@@ -821,12 +836,20 @@ export class N8NDocumentationMCPServer {
         } else if (errorMessage.includes('Unknown category') || errorMessage.includes('not found')) {
           helpfulMessage += '\n\nNote: The requested resource or category was not found. Please check the available options.';
         }
-        
+
         // For n8n schema errors, add specific guidance
         if (name.startsWith('validate_') && (errorMessage.includes('config') || errorMessage.includes('nodeType'))) {
           helpfulMessage += '\n\nFor validation tools:\n- nodeType should be a string (e.g., "nodes-base.webhook")\n- config should be an object (e.g., {})';
         }
-        
+
+        // Include diagnostic info about received args to help debug client issues
+        try {
+          const argDiag = processedArgs && typeof processedArgs === 'object'
+            ? Object.entries(processedArgs).map(([k, v]) => `${k}: ${typeof v}`).join(', ')
+            : `args type: ${typeof processedArgs}`;
+          helpfulMessage += `\n\n[Diagnostic] Received arg types: {${argDiag}}`;
+        } catch { /* ignore diagnostic errors */ }
+
         return {
           content: [
             {
@@ -1131,9 +1154,15 @@ export class N8NDocumentationMCPServer {
   }
 
   /**
-   * Coerce stringified JSON parameters back to objects/arrays.
-   * Workaround for Claude Desktop 1.1.3189 which serializes object/array
-   * params as JSON strings before sending them to MCP servers.
+   * Coerce mistyped parameters back to their expected types.
+   * Workaround for Claude Desktop / Claude.ai MCP client bugs that serialize
+   * parameters incorrectly (objects as strings, numbers as strings, etc.).
+   *
+   * Handles ALL type mismatches based on the tool's inputSchema:
+   *   string→object, string→array   : JSON.parse
+   *   string→number, string→integer : Number()
+   *   string→boolean                : "true"/"false" parsing
+   *   number→string, boolean→string : .toString()
    */
   private coerceStringifiedJsonParams(
     toolName: string,
@@ -1147,28 +1176,81 @@ export class N8NDocumentationMCPServer {
 
     const properties = tool.inputSchema.properties;
     const coerced = { ...args };
+    let coercedAny = false;
 
     for (const [key, value] of Object.entries(coerced)) {
-      if (typeof value !== 'string') continue;
-      const expectedType = (properties as any)[key]?.type;
-      if (expectedType !== 'object' && expectedType !== 'array') continue;
+      if (value === undefined || value === null) continue;
 
-      const trimmed = value.trim();
-      const validPrefix = (expectedType === 'object' && trimmed.startsWith('{'))
-                       || (expectedType === 'array'  && trimmed.startsWith('['));
-      if (!validPrefix) continue;
+      const propSchema = (properties as any)[key];
+      if (!propSchema) continue;
+      const expectedType = propSchema.type;
+      if (!expectedType) continue;
 
-      try {
-        const parsed = JSON.parse(trimmed);
-        const isArray = Array.isArray(parsed);
-        if ((expectedType === 'object' && typeof parsed === 'object' && !isArray)
-         || (expectedType === 'array'  && isArray)) {
-          coerced[key] = parsed;
-          logger.warn(`Coerced stringified ${expectedType} param "${key}" for tool "${toolName}"`);
+      const actualType = typeof value;
+
+      // Already correct type — skip
+      if (expectedType === 'string' && actualType === 'string') continue;
+      if ((expectedType === 'number' || expectedType === 'integer') && actualType === 'number') continue;
+      if (expectedType === 'boolean' && actualType === 'boolean') continue;
+      if (expectedType === 'object' && actualType === 'object' && !Array.isArray(value)) continue;
+      if (expectedType === 'array' && Array.isArray(value)) continue;
+
+      // --- Coercion: string value → expected type ---
+      if (actualType === 'string') {
+        const trimmed = (value as string).trim();
+
+        if (expectedType === 'object' && trimmed.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+              coerced[key] = parsed;
+              coercedAny = true;
+            }
+          } catch { /* keep original */ }
+          continue;
         }
-      } catch {
-        // Not valid JSON — keep original string, downstream validation will report the error
+
+        if (expectedType === 'array' && trimmed.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+              coerced[key] = parsed;
+              coercedAny = true;
+            }
+          } catch { /* keep original */ }
+          continue;
+        }
+
+        if (expectedType === 'number' || expectedType === 'integer') {
+          const num = Number(trimmed);
+          if (!isNaN(num) && trimmed !== '') {
+            coerced[key] = expectedType === 'integer' ? Math.trunc(num) : num;
+            coercedAny = true;
+          }
+          continue;
+        }
+
+        if (expectedType === 'boolean') {
+          if (trimmed === 'true') { coerced[key] = true; coercedAny = true; }
+          else if (trimmed === 'false') { coerced[key] = false; coercedAny = true; }
+          continue;
+        }
       }
+
+      // --- Coercion: number/boolean value → expected string ---
+      if (expectedType === 'string' && (actualType === 'number' || actualType === 'boolean')) {
+        coerced[key] = String(value);
+        coercedAny = true;
+        continue;
+      }
+    }
+
+    if (coercedAny) {
+      logger.warn(`Coerced mistyped params for tool "${toolName}"`, {
+        original: Object.fromEntries(
+          Object.entries(args).map(([k, v]) => [k, `${typeof v}: ${typeof v === 'string' ? v.substring(0, 80) : v}`])
+        ),
+      });
     }
 
     return coerced;

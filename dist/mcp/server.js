@@ -457,6 +457,18 @@ class N8NDocumentationMCPServer {
                 };
             }
             let processedArgs = args;
+            if (typeof args === 'string') {
+                try {
+                    const parsed = JSON.parse(args);
+                    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                        processedArgs = parsed;
+                        logger_1.logger.warn(`Coerced stringified args object for tool "${name}"`);
+                    }
+                }
+                catch {
+                    logger_1.logger.warn(`Tool "${name}" received string args that are not valid JSON`);
+                }
+            }
             if (args && typeof args === 'object' && 'output' in args) {
                 try {
                     const possibleNestedData = args.output;
@@ -485,6 +497,7 @@ class N8NDocumentationMCPServer {
                     });
                 }
             }
+            processedArgs = this.coerceStringifiedJsonParams(name, processedArgs);
             try {
                 logger_1.logger.debug(`Executing tool: ${name}`, { args: processedArgs });
                 const startTime = Date.now();
@@ -556,6 +569,13 @@ class N8NDocumentationMCPServer {
                 if (name.startsWith('validate_') && (errorMessage.includes('config') || errorMessage.includes('nodeType'))) {
                     helpfulMessage += '\n\nFor validation tools:\n- nodeType should be a string (e.g., "nodes-base.webhook")\n- config should be an object (e.g., {})';
                 }
+                try {
+                    const argDiag = processedArgs && typeof processedArgs === 'object'
+                        ? Object.entries(processedArgs).map(([k, v]) => `${k}: ${typeof v}`).join(', ')
+                        : `args type: ${typeof processedArgs}`;
+                    helpfulMessage += `\n\n[Diagnostic] Received arg types: {${argDiag}}`;
+                }
+                catch { }
                 return {
                     content: [
                         {
@@ -794,6 +814,93 @@ class N8NDocumentationMCPServer {
             }
         }
         return true;
+    }
+    coerceStringifiedJsonParams(toolName, args) {
+        if (!args || typeof args !== 'object')
+            return args;
+        const allTools = [...tools_1.n8nDocumentationToolsFinal, ...tools_n8n_manager_1.n8nManagementTools];
+        const tool = allTools.find(t => t.name === toolName);
+        if (!tool?.inputSchema?.properties)
+            return args;
+        const properties = tool.inputSchema.properties;
+        const coerced = { ...args };
+        let coercedAny = false;
+        for (const [key, value] of Object.entries(coerced)) {
+            if (value === undefined || value === null)
+                continue;
+            const propSchema = properties[key];
+            if (!propSchema)
+                continue;
+            const expectedType = propSchema.type;
+            if (!expectedType)
+                continue;
+            const actualType = typeof value;
+            if (expectedType === 'string' && actualType === 'string')
+                continue;
+            if ((expectedType === 'number' || expectedType === 'integer') && actualType === 'number')
+                continue;
+            if (expectedType === 'boolean' && actualType === 'boolean')
+                continue;
+            if (expectedType === 'object' && actualType === 'object' && !Array.isArray(value))
+                continue;
+            if (expectedType === 'array' && Array.isArray(value))
+                continue;
+            if (actualType === 'string') {
+                const trimmed = value.trim();
+                if (expectedType === 'object' && trimmed.startsWith('{')) {
+                    try {
+                        const parsed = JSON.parse(trimmed);
+                        if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+                            coerced[key] = parsed;
+                            coercedAny = true;
+                        }
+                    }
+                    catch { }
+                    continue;
+                }
+                if (expectedType === 'array' && trimmed.startsWith('[')) {
+                    try {
+                        const parsed = JSON.parse(trimmed);
+                        if (Array.isArray(parsed)) {
+                            coerced[key] = parsed;
+                            coercedAny = true;
+                        }
+                    }
+                    catch { }
+                    continue;
+                }
+                if (expectedType === 'number' || expectedType === 'integer') {
+                    const num = Number(trimmed);
+                    if (!isNaN(num) && trimmed !== '') {
+                        coerced[key] = expectedType === 'integer' ? Math.trunc(num) : num;
+                        coercedAny = true;
+                    }
+                    continue;
+                }
+                if (expectedType === 'boolean') {
+                    if (trimmed === 'true') {
+                        coerced[key] = true;
+                        coercedAny = true;
+                    }
+                    else if (trimmed === 'false') {
+                        coerced[key] = false;
+                        coercedAny = true;
+                    }
+                    continue;
+                }
+            }
+            if (expectedType === 'string' && (actualType === 'number' || actualType === 'boolean')) {
+                coerced[key] = String(value);
+                coercedAny = true;
+                continue;
+            }
+        }
+        if (coercedAny) {
+            logger_1.logger.warn(`Coerced mistyped params for tool "${toolName}"`, {
+                original: Object.fromEntries(Object.entries(args).map(([k, v]) => [k, `${typeof v}: ${typeof v === 'string' ? v.substring(0, 80) : v}`])),
+            });
+        }
+        return coerced;
     }
     async executeTool(name, args) {
         args = args || {};
