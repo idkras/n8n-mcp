@@ -22,7 +22,7 @@ const logger = new Logger({ prefix: '[WorkflowValidator]' });
  * All valid connection output keys in n8n workflows.
  * Any key not in this set is malformed and should be flagged.
  */
-const VALID_CONNECTION_TYPES = new Set<string>([
+export const VALID_CONNECTION_TYPES = new Set<string>([
   'main',
   'error',
   ...AI_CONNECTION_TYPES,

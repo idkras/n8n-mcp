@@ -1,5 +1,6 @@
 import { NodeRepository } from '../database/node-repository';
 import { EnhancedConfigValidator } from './enhanced-config-validator';
+export declare const VALID_CONNECTION_TYPES: Set<string>;
 interface WorkflowNode {
     id: string;
     name: string;

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WorkflowValidator = void 0;
+exports.WorkflowValidator = exports.VALID_CONNECTION_TYPES = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 const expression_validator_1 = require("./expression-validator");
 const expression_format_validator_1 = require("./expression-format-validator");
@@ -16,7 +16,7 @@ const node_type_utils_1 = require("../utils/node-type-utils");
 const node_classification_1 = require("../utils/node-classification");
 const tool_variant_generator_1 = require("./tool-variant-generator");
 const logger = new logger_1.Logger({ prefix: '[WorkflowValidator]' });
-const VALID_CONNECTION_TYPES = new Set([
+exports.VALID_CONNECTION_TYPES = new Set([
     'main',
     'error',
     ...ai_node_validator_1.AI_CONNECTION_TYPES,
@@ -403,7 +403,7 @@ class WorkflowValidator {
                 continue;
             }
             for (const [outputKey, outputConnections] of Object.entries(outputs)) {
-                if (!VALID_CONNECTION_TYPES.has(outputKey)) {
+                if (!exports.VALID_CONNECTION_TYPES.has(outputKey)) {
                     let suggestion = '';
                     if (/^\d+$/.test(outputKey)) {
                         suggestion = ` If you meant to use output index ${outputKey}, use main[${outputKey}] instead.`;
@@ -411,7 +411,7 @@ class WorkflowValidator {
                     result.errors.push({
                         type: 'error',
                         nodeName: sourceName,
-                        message: `Unknown connection output key "${outputKey}" on node "${sourceName}". Valid keys are: ${[...VALID_CONNECTION_TYPES].join(', ')}.${suggestion}`,
+                        message: `Unknown connection output key "${outputKey}" on node "${sourceName}". Valid keys are: ${[...exports.VALID_CONNECTION_TYPES].join(', ')}.${suggestion}`,
                         code: 'UNKNOWN_CONNECTION_KEY'
                     });
                     result.statistics.invalidConnections++;
@@ -456,7 +456,7 @@ class WorkflowValidator {
                     result.statistics.invalidConnections++;
                     return;
                 }
-                if (connection.type && !VALID_CONNECTION_TYPES.has(connection.type)) {
+                if (connection.type && !exports.VALID_CONNECTION_TYPES.has(connection.type)) {
                     let suggestion = '';
                     if (/^\d+$/.test(connection.type)) {
                         suggestion = ` Numeric types are not valid - use "main", "error", or an AI connection type.`;
