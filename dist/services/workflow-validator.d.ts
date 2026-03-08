@@ -85,7 +85,12 @@ export declare class WorkflowValidator {
     private validateErrorOutputConfiguration;
     private validateAIToolConnection;
     private validateAIToolSource;
+    private getNodeOutputTypes;
+    private validateNotAISubNode;
+    private getShortNodeType;
+    private getConditionalOutputInfo;
     private validateOutputIndexBounds;
+    private validateConditionalBranchUsage;
     private validateInputIndexBounds;
     private flagOrphanedNodes;
     private validateTriggerReachability;

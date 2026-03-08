@@ -422,6 +422,9 @@ class WorkflowValidator {
                 if (outputKey === 'ai_tool') {
                     this.validateAIToolSource(sourceNode, result);
                 }
+                if (outputKey === 'main') {
+                    this.validateNotAISubNode(sourceNode, result);
+                }
                 this.validateConnectionOutputs(sourceName, outputConnections, nodeMap, nodeIdMap, result, outputKey);
             }
         }
@@ -443,6 +446,7 @@ class WorkflowValidator {
         if (outputType === 'main' && sourceNode) {
             this.validateErrorOutputConfiguration(sourceName, sourceNode, outputs, nodeMap, result);
             this.validateOutputIndexBounds(sourceNode, outputs, result);
+            this.validateConditionalBranchUsage(sourceNode, outputs, result);
         }
         outputs.forEach((outputConnections, outputIndex) => {
             if (!outputConnections)
@@ -644,6 +648,57 @@ class WorkflowValidator {
             code: 'INVALID_AI_TOOL_SOURCE'
         });
     }
+    getNodeOutputTypes(nodeType) {
+        const normalizedType = node_type_normalizer_1.NodeTypeNormalizer.normalizeToFullForm(nodeType);
+        const nodeInfo = this.nodeRepository.getNode(normalizedType);
+        if (!nodeInfo || !nodeInfo.outputs)
+            return null;
+        const outputs = nodeInfo.outputs;
+        if (!Array.isArray(outputs))
+            return null;
+        for (const output of outputs) {
+            if (typeof output === 'string' && output.startsWith('={{')) {
+                return null;
+            }
+        }
+        return outputs;
+    }
+    validateNotAISubNode(sourceNode, result) {
+        const outputTypes = this.getNodeOutputTypes(sourceNode.type);
+        if (!outputTypes)
+            return;
+        const hasMainOutput = outputTypes.some(t => t === 'main');
+        if (hasMainOutput)
+            return;
+        const aiTypes = outputTypes.filter(t => t !== 'main');
+        const expectedType = aiTypes[0] || 'ai_languageModel';
+        result.errors.push({
+            type: 'error',
+            nodeId: sourceNode.id,
+            nodeName: sourceNode.name,
+            message: `Node "${sourceNode.name}" (${sourceNode.type}) is an AI sub-node that outputs "${expectedType}" connections. ` +
+                `It cannot be used with "main" connections. Connect it to an AI Agent or Chain via "${expectedType}" instead.`,
+            code: 'AI_SUBNODE_MAIN_CONNECTION'
+        });
+    }
+    getShortNodeType(sourceNode) {
+        const normalizedType = node_type_normalizer_1.NodeTypeNormalizer.normalizeToFullForm(sourceNode.type);
+        return normalizedType.replace(/^(n8n-)?nodes-base\./, '');
+    }
+    getConditionalOutputInfo(sourceNode) {
+        const shortType = this.getShortNodeType(sourceNode);
+        if (shortType === 'if' || shortType === 'filter') {
+            return { shortType, expectedOutputs: 2 };
+        }
+        if (shortType === 'switch') {
+            const rules = sourceNode.parameters?.rules?.values || sourceNode.parameters?.rules;
+            if (Array.isArray(rules)) {
+                return { shortType, expectedOutputs: rules.length + 1 };
+            }
+            return null;
+        }
+        return null;
+    }
     validateOutputIndexBounds(sourceNode, outputs, result) {
         const normalizedType = node_type_normalizer_1.NodeTypeNormalizer.normalizeToFullForm(sourceNode.type);
         const nodeInfo = this.nodeRepository.getNode(normalizedType);
@@ -658,18 +713,12 @@ class WorkflowValidator {
         }
         if (mainOutputCount === 0)
             return;
-        const shortType = normalizedType.replace(/^(n8n-)?nodes-base\./, '');
-        if (shortType === 'switch') {
-            const rules = sourceNode.parameters?.rules?.values || sourceNode.parameters?.rules;
-            if (Array.isArray(rules)) {
-                mainOutputCount = rules.length + 1;
-            }
-            else {
-                return;
-            }
+        const conditionalInfo = this.getConditionalOutputInfo(sourceNode);
+        if (conditionalInfo) {
+            mainOutputCount = conditionalInfo.expectedOutputs;
         }
-        if (shortType === 'if' || shortType === 'filter') {
-            mainOutputCount = 2;
+        else if (this.getShortNodeType(sourceNode) === 'switch') {
+            return;
         }
         if (sourceNode.onError === 'continueErrorOutput') {
             mainOutputCount += 1;
@@ -690,6 +739,44 @@ class WorkflowValidator {
                 }
             }
         }
+    }
+    validateConditionalBranchUsage(sourceNode, outputs, result) {
+        const conditionalInfo = this.getConditionalOutputInfo(sourceNode);
+        if (!conditionalInfo || conditionalInfo.expectedOutputs < 2)
+            return;
+        const { shortType, expectedOutputs } = conditionalInfo;
+        const main0Count = outputs[0]?.length || 0;
+        if (main0Count < 2)
+            return;
+        const hasHigherIndexConnections = outputs.slice(1).some(conns => conns && conns.length > 0);
+        if (hasHigherIndexConnections)
+            return;
+        let message;
+        if (shortType === 'if' || shortType === 'filter') {
+            const isFilter = shortType === 'filter';
+            const displayName = isFilter ? 'Filter' : 'IF';
+            const trueLabel = isFilter ? 'matched' : 'true';
+            const falseLabel = isFilter ? 'unmatched' : 'false';
+            message = `${displayName} node "${sourceNode.name}" has ${main0Count} connections on the "${trueLabel}" branch (main[0]) ` +
+                `but no connections on the "${falseLabel}" branch (main[1]). ` +
+                `All ${main0Count} target nodes execute together on the "${trueLabel}" branch, ` +
+                `while the "${falseLabel}" branch has no effect. ` +
+                `Split connections: main[0] for ${trueLabel}, main[1] for ${falseLabel}.`;
+        }
+        else {
+            message = `Switch node "${sourceNode.name}" has ${main0Count} connections on output 0 ` +
+                `but no connections on any other outputs (1-${expectedOutputs - 1}). ` +
+                `All ${main0Count} target nodes execute together on output 0, ` +
+                `while other switch branches have no effect. ` +
+                `Distribute connections across outputs to match switch rules.`;
+        }
+        result.warnings.push({
+            type: 'warning',
+            nodeId: sourceNode.id,
+            nodeName: sourceNode.name,
+            message,
+            code: 'CONDITIONAL_BRANCH_FANOUT'
+        });
     }
     validateInputIndexBounds(sourceName, targetNode, connection, result) {
         const normalizedType = node_type_normalizer_1.NodeTypeNormalizer.normalizeToFullForm(targetNode.type);
