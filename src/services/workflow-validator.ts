@@ -546,15 +546,25 @@ export class WorkflowValidator {
           continue;
         }
 
-        // Validate node configuration
-        // Add @version to parameters for displayOptions evaluation (supports _cnd operators)
-        const paramsWithVersion = {
+        // Validate node configuration.
+        // Include @version for displayOptions evaluation and node-level execution props
+        // so validators see the same shape n8n uses at runtime.
+        const nodeConfigForValidation = {
           '@version': node.typeVersion || 1,
-          ...node.parameters
+          ...(node.parameters || {}),
+          onError: node.onError,
+          continueOnFail: node.continueOnFail,
+          retryOnFail: node.retryOnFail,
+          maxTries: node.maxTries,
+          waitBetweenTries: node.waitBetweenTries,
+          executeOnce: node.executeOnce,
+          disabled: node.disabled,
+          credentials: node.credentials,
         };
+
         const nodeValidation = this.nodeValidator.validateWithMode(
           node.type,
-          paramsWithVersion,
+          nodeConfigForValidation,
           nodeInfo.properties || [],
           'operation',
           profile as any
