@@ -475,9 +475,21 @@ export class WorkflowValidator {
         }
 
         // Validate node configuration
+        const nodeConfigForValidation = {
+          ...(node.parameters || {}),
+          onError: node.onError,
+          continueOnFail: node.continueOnFail,
+          retryOnFail: node.retryOnFail,
+          maxTries: node.maxTries,
+          waitBetweenTries: node.waitBetweenTries,
+          executeOnce: node.executeOnce,
+          disabled: node.disabled,
+          credentials: node.credentials,
+        };
+
         const nodeValidation = this.nodeValidator.validateWithMode(
           node.type,
-          node.parameters,
+          nodeConfigForValidation,
           nodeInfo.properties || [],
           'operation',
           profile as any

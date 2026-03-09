@@ -1332,6 +1332,48 @@ describe('WorkflowValidator - Comprehensive Tests', () => {
       expect(result.errors.some(e => e.message.includes('Invalid onError value: "invalidValue"'))).toBe(true);
     });
 
+    it('should accept webhook responseNode when onError is at node level', async () => {
+      const workflow = {
+        nodes: [
+          {
+            id: '1',
+            name: 'Webhook',
+            type: 'n8n-nodes-base.webhook',
+            position: [100, 100],
+            typeVersion: 1,
+            parameters: {
+              path: 'test-webhook',
+              httpMethod: 'POST',
+              responseMode: 'responseNode',
+              options: {},
+            },
+            onError: 'continueRegularOutput'
+          },
+          {
+            id: '2',
+            name: 'Response',
+            type: 'n8n-nodes-base.respondToWebhook',
+            position: [300, 100],
+            typeVersion: 1,
+            parameters: {
+              respondWith: 'json',
+              responseBody: '={{ JSON.stringify({ ok: true }) }}'
+            }
+          }
+        ],
+        connections: {
+          'Webhook': {
+            main: [[{ node: 'Response', type: 'main', index: 0 }]]
+          }
+        }
+      } as any;
+
+      const result = await validator.validateWorkflow(workflow as any);
+
+      expect(result.errors.some(e => e.message.includes('responseNode mode requires onError'))).toBe(false);
+      expect(result.errors.some(e => e.message.includes('Node-level properties onError are in the wrong location'))).toBe(false);
+    });
+
     it('should warn about deprecated continueOnFail', async () => {
       const workflow = {
         nodes: [
