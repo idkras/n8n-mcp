@@ -277,8 +277,9 @@ Guidelines:
     const result = { ...parsed };
 
     for (const [field, maxLength] of Object.entries(limits)) {
-      if (Array.isArray(result[field]) && result[field].length > maxLength) {
-        result[field] = (result[field] as unknown[]).slice(0, maxLength);
+      const fieldValue = result[field];
+      if (Array.isArray(fieldValue) && fieldValue.length > maxLength) {
+        result[field] = fieldValue.slice(0, maxLength);
       }
     }
 

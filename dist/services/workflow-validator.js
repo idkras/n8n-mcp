@@ -346,11 +346,19 @@ class WorkflowValidator {
                 if (nodeInfo.isInferred) {
                     continue;
                 }
-                const paramsWithVersion = {
+                const nodeConfigForValidation = {
                     '@version': node.typeVersion || 1,
-                    ...node.parameters
+                    ...(node.parameters || {}),
+                    onError: node.onError,
+                    continueOnFail: node.continueOnFail,
+                    retryOnFail: node.retryOnFail,
+                    maxTries: node.maxTries,
+                    waitBetweenTries: node.waitBetweenTries,
+                    executeOnce: node.executeOnce,
+                    disabled: node.disabled,
+                    credentials: node.credentials,
                 };
-                const nodeValidation = this.nodeValidator.validateWithMode(node.type, paramsWithVersion, nodeInfo.properties || [], 'operation', profile);
+                const nodeValidation = this.nodeValidator.validateWithMode(node.type, nodeConfigForValidation, nodeInfo.properties || [], 'operation', profile);
                 nodeValidation.errors.forEach((error) => {
                     result.errors.push({
                         type: 'error',
