@@ -1,39 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1773077648442,
+  "lastUpdate": 1773403396849,
   "repoUrl": "https://github.com/idkras/n8n-mcp",
   "entries": {
     "n8n-mcp Benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "56956555+czlonkowski@users.noreply.github.com",
-            "name": "Romuald Członkowski",
-            "username": "czlonkowski"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "cdaa29e7a2445f1e84144965a7b803be00f6b760",
-          "message": "fix: memory leak in session removal - close MCP server properly (#471) (#472)\n\n- Add close() method to N8NDocumentationMCPServer that:\n  - Calls server.close() (MCP SDK cleanup)\n  - Clears internal cache\n  - Nullifies service references to help GC\n- Update removeSession() to call server.close() before releasing references\n\nRoot cause: removeSession() deleted server from map but didn't call cleanup\nEvidence: Production server memory grew ~1GB in 43 minutes (10% to 35%)\n\nConceived by Romuald Członkowski - https://www.aiadvisors.pl/en\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-authored-by: Romuald Członkowski <romualdczlonkowski@MacBook-Pro-Romuald.local>\nCo-authored-by: Claude <noreply@anthropic.com>",
-          "timestamp": "2025-12-05T18:30:51+01:00",
-          "tree_id": "2e72fdb4e4336b7c17f579b885fbdeae90c0439c",
-          "url": "https://github.com/czlonkowski/n8n-mcp/commit/cdaa29e7a2445f1e84144965a7b803be00f6b760"
-        },
-        "date": 1764955975115,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "sample - array sorting - small",
-            "value": 0.0136,
-            "range": "0.3096",
-            "unit": "ms",
-            "extra": "73341 ops/sec"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -1530,6 +1499,35 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/idkras/n8n-mcp/commit/62b5fc88e00489737221572f1518bd8c9e9027b2"
         },
         "date": 1773077646197,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "sample - array sorting - small",
+            "value": 0.0136,
+            "range": "0.3096",
+            "unit": "ms",
+            "extra": "73341 ops/sec"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ilyakrasinsky@gmail.com",
+            "name": "Ilya Krasinsky"
+          },
+          "committer": {
+            "email": "ilyakrasinsky@gmail.com",
+            "name": "Ilya Krasinsky"
+          },
+          "distinct": true,
+          "id": "e7008dfd0ba61abd4021aedf7ebd5c4ab9d471df",
+          "message": "chore: sync local nodes database snapshot",
+          "timestamp": "2026-03-13T12:59:16+01:00",
+          "tree_id": "e2996a0b4002f9f02257134f23611b4eb6b56495",
+          "url": "https://github.com/idkras/n8n-mcp/commit/e7008dfd0ba61abd4021aedf7ebd5c4ab9d471df"
+        },
+        "date": 1773403396066,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
