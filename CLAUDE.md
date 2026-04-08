@@ -2,6 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## §0 Макрос «ID + человекочитаемое имя»
+Голые `P0`, `G01`, `E01`, `pr-rick-*` без подписи запрещены. Формат: `G01 — {что за геп}`, `P0 — {суть шага}`. Hard fail. См. root `AGENTS.md` секция «Plain language» и root `CLAUDE.md`.
+
 ## Project Overview
 
 n8n-mcp is a comprehensive documentation and knowledge server that provides AI assistants with complete access to n8n node information through the Model Context Protocol (MCP). It serves as a bridge between n8n's workflow automation platform and AI models, enabling them to understand and work with n8n nodes effectively.
