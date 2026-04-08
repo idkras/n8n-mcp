@@ -1,39 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775214646513,
+  "lastUpdate": 1775639485494,
   "repoUrl": "https://github.com/idkras/n8n-mcp",
   "entries": {
     "n8n-mcp Benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "56956555+czlonkowski@users.noreply.github.com",
-            "name": "Romuald Członkowski",
-            "username": "czlonkowski"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "47510ef6dad95bfe463ca6e006ab9e9bd2b9a482",
-          "message": "feat: add Tool variant support for AI Agent integration (v2.29.1) (#484)\n\n* feat: add Tool variant support for AI Agent integration (v2.29.1)\n\nAdd comprehensive support for n8n Tool variants - specialized node versions\ncreated for AI Agent tool connections (e.g., nodes-base.supabaseTool from\nnodes-base.supabase).\n\nKey Features:\n- 266 Tool variants auto-generated during database rebuild\n- Bidirectional cross-references between base nodes and Tool variants\n- Clear AI guidance in get_node responses via toolVariantInfo object\n- Tool variants include toolDescription property and ai_tool output type\n\nDatabase Schema Changes:\n- Added is_tool_variant, tool_variant_of, has_tool_variant columns\n- Added indexes for efficient Tool variant queries\n\nFiles Changed:\n- src/database/schema.sql - New columns and indexes\n- src/parsers/node-parser.ts - Extended ParsedNode interface\n- src/services/tool-variant-generator.ts - NEW Tool variant generation\n- src/database/node-repository.ts - Store/retrieve Tool variant fields\n- src/scripts/rebuild.ts - Generate Tool variants during rebuild\n- src/mcp/server.ts - Add toolVariantInfo to get_node responses\n\nConceived by Romuald Członkowski - www.aiadvisors.pl/en\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* fix: address code review issues for Tool variant feature\n\n- Add input validation in ToolVariantGenerator.generateToolVariant()\n  - Validate nodeType exists before use\n  - Ensure properties is array before spreading\n- Fix isToolVariantNodeType() edge case\n  - Add robust validation for package.nodeName pattern\n  - Prevent false positives for nodes ending in 'Tool'\n- Add validation in NodeRepository.getToolVariant()\n  - Validate node type format (must contain dot)\n- Add null check in buildToolVariantGuidance()\n  - Check node.nodeType exists before concatenation\n- Extract magic number to constant in rebuild.ts\n  - MIN_EXPECTED_TOOL_VARIANTS = 200 with documentation\n\nConceived by Romuald Członkowski - www.aiadvisors.pl/en\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* test: update unit tests for Tool variant schema changes\n\nUpdated node-repository-core.test.ts and node-repository-outputs.test.ts\nto include the new Tool variant columns (is_tool_variant, tool_variant_of,\nhas_tool_variant) in mock data and parameter position assertions.\n\nConceived by Romuald Członkowski - https://www.aiadvisors.pl/en\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* feat: add validation and autofix for Tool variant corrections\n\n- Add validateAIToolSource() to detect base nodes incorrectly used as\n  AI tools when Tool variant exists (e.g., supabase vs supabaseTool)\n- Add WRONG_NODE_TYPE_FOR_AI_TOOL error code with fix suggestions\n- Add tool-variant-correction fix type to WorkflowAutoFixer\n- Add toWorkflowFormat() method to NodeTypeNormalizer for converting\n  database format back to n8n API format\n- Update ValidationIssue interface to include code and fix properties\n\nConceived by Romuald Członkowski - https://www.aiadvisors.pl/en\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* feat(v2.29.2): Tool variant validation, auto-fix, and comprehensive tests\n\nFeatures:\n- validateAIToolSource() detects base nodes incorrectly used as AI tools\n- WRONG_NODE_TYPE_FOR_AI_TOOL error with actionable fix suggestions\n- tool-variant-correction fix type in n8n_autofix_workflow\n- NodeTypeNormalizer.toWorkflowFormat() for db→API format conversion\n\nCode Review Improvements:\n- Removed duplicate database lookup in validateAIToolSource()\n- Exported ValidationIssue interface for downstream type safety\n- Added fallback description for fix operations\n\nTest Coverage (83 new tests):\n- 12 tests for workflow-validator-tool-variants\n- 13 tests for workflow-auto-fixer-tool-variants\n- 19 tests for toWorkflowFormat() in node-type-normalizer\n- Edge cases: langchain tools, unknown nodes, community nodes\n\nConceived by Romuald Członkowski - https://www.aiadvisors.pl/en\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* fix: skip templates validation test when templates not available\n\nThe real-world-structure-validation test was failing in CI because\ntemplates are not populated in the CI environment. Updated test to\ngracefully handle missing templates by checking availability in\nbeforeAll and skipping validation when templates are not present.\n\nConceived by Romuald Członkowski - https://www.aiadvisors.pl/en\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* fix: increase memory threshold in performance test for CI variability\n\nThe memory efficiency test was failing in CI with ~23MB memory increase\nvs 20MB threshold. Increased threshold to 30MB to account for CI\nenvironment variability while still catching significant memory leaks.\n\nConceived by Romuald Członkowski - https://www.aiadvisors.pl/en\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Romuald Członkowski <romualdczlonkowski@MacBook-Pro-Romuald.local>\nCo-authored-by: Claude Opus 4.5 <noreply@anthropic.com>",
-          "timestamp": "2025-12-12T12:51:38+01:00",
-          "tree_id": "af23f172e1a21379c9268081aa4f30b8ab792669",
-          "url": "https://github.com/czlonkowski/n8n-mcp/commit/47510ef6dad95bfe463ca6e006ab9e9bd2b9a482"
-        },
-        "date": 1765540397564,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "sample - array sorting - small",
-            "value": 0.0136,
-            "range": "0.3096",
-            "unit": "ms",
-            "extra": "73341 ops/sec"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -1522,6 +1491,35 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/idkras/n8n-mcp/commit/adfebe19137205c1e1f9d36a616fd0253d2aa4c4"
         },
         "date": 1775214646107,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "sample - array sorting - small",
+            "value": 0.0136,
+            "range": "0.3096",
+            "unit": "ms",
+            "extra": "73341 ops/sec"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ilyakrasinsky@gmail.com",
+            "name": "Ilya Krasinsky"
+          },
+          "committer": {
+            "email": "ilyakrasinsky@gmail.com",
+            "name": "Ilya Krasinsky"
+          },
+          "distinct": true,
+          "id": "e820f5759dbc5054f6c4b77ca98fbb120581ce1d",
+          "message": "docs: §0 макрос в CLAUDE.md + обновление nodes.db\n\nГолые коды без подписи запрещены.\nnodes.db обновлён с актуальными данными n8n нод.\n\nCo-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-08T11:07:31+02:00",
+          "tree_id": "bccd98ea5660c5f88d9f3cd6f39f9bbd5f656c0c",
+          "url": "https://github.com/idkras/n8n-mcp/commit/e820f5759dbc5054f6c4b77ca98fbb120581ce1d"
+        },
+        "date": 1775639485037,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
