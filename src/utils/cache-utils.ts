@@ -4,7 +4,7 @@
  */
 
 import { createHash } from 'crypto';
-import { LRUCache } from 'lru-cache';
+import LRUCache from 'lru-cache';
 import { logger } from './logger';
 
 /**

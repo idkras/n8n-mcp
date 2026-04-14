@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DEFAULT_RETRY_CONFIG = exports.CacheMutex = exports.cacheMetrics = void 0;
 exports.getCacheConfig = getCacheConfig;
@@ -8,7 +11,7 @@ exports.calculateBackoffDelay = calculateBackoffDelay;
 exports.withRetry = withRetry;
 exports.getCacheStatistics = getCacheStatistics;
 const crypto_1 = require("crypto");
-const lru_cache_1 = require("lru-cache");
+const lru_cache_1 = __importDefault(require("lru-cache"));
 const logger_1 = require("./logger");
 const hashMemoCache = new Map();
 const MAX_MEMO_SIZE = 1000;
@@ -105,7 +108,7 @@ function createCacheKey(input) {
 }
 function createInstanceCache(onDispose) {
     const config = getCacheConfig();
-    return new lru_cache_1.LRUCache({
+    return new lru_cache_1.default({
         max: config.max,
         ttl: config.ttlMinutes * 60 * 1000,
         updateAgeOnGet: true,
