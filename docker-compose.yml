@@ -4,7 +4,7 @@ version: '3.8'
 
 x-heroes-credentials-launcher:
   required: true
-  command: python3 -m heroes_platform.credentials.service_env n8n env HEROES_CREDENTIALS_INJECTED=1 docker compose up
+  command: python3 -m heroes_platform.credentials.service_env n8n docker compose up
 
 services:
   n8n-mcp:

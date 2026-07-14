@@ -280,3 +280,38 @@ fi
     });
   });
 });
+
+describe('registry-backed compose launcher contract', () => {
+  const packageRoot = path.resolve(__dirname, '../../..');
+
+  function readCompose(name: string): string {
+    return fs.readFileSync(path.join(packageRoot, name), 'utf8');
+  }
+
+  it.each([
+    'docker-compose.yml',
+    'docker-compose.n8n.yml',
+    'docker-compose.buildkit.yml',
+  ])('%s rejects a raw compose launch without the service_env sentinel', (name) => {
+    const compose = readCompose(name);
+
+    expect(compose).toContain('x-heroes-credentials-launcher:');
+    expect(compose).toContain('required: true');
+    expect(compose).toContain(
+      'python3 -m heroes_platform.credentials.service_env n8n docker compose',
+    );
+    expect(compose).toMatch(
+      /HEROES_CREDENTIALS_INJECTED(?:=|: ")\$\{HEROES_CREDENTIALS_INJECTED:\?launch through heroes_platform\.credentials\.service_env\}/,
+    );
+  });
+
+  it('requires every n8n stack secret injected by the exact service_env profile', () => {
+    const compose = readCompose('docker-compose.n8n.yml');
+
+    expect(compose).toContain('N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:?');
+    expect(compose).toContain('N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:?');
+    expect(compose).toContain('N8N_API_KEY=${N8N_API_KEY:?');
+    expect(compose).toContain('MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN:?');
+    expect(compose).not.toContain('N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:-password}');
+  });
+});
