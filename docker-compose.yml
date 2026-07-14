@@ -1,5 +1,6 @@
 # docker-compose.yml
 # For optimized builds with BuildKit, use: docker-compose -f docker-compose.buildkit.yml up
+# Credential launcher: python3 -m heroes_platform.credentials.service_env n8n docker compose up
 version: '3.8'
 
 services:

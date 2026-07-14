@@ -1,3 +1,4 @@
+# Credential launcher: python3 -m heroes_platform.credentials.service_env n8n docker compose -f docker-compose.n8n.yml up
 version: '3.8'
 
 services:
