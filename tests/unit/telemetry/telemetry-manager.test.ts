@@ -34,6 +34,8 @@ describe('TelemetryManager', () => {
   let manager: TelemetryManager;
 
   beforeEach(() => {
+    process.env.SUPABASE_URL = TELEMETRY_BACKEND.URL;
+    process.env.SUPABASE_ANON_KEY = 'registry-injected-test-key';
     // Reset singleton using the new method
     TelemetryManager.resetInstance();
 
@@ -113,6 +115,8 @@ describe('TelemetryManager', () => {
   afterEach(() => {
     // Clean up global state
     TelemetryManager.resetInstance();
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_ANON_KEY;
   });
 
   describe('singleton behavior', () => {
@@ -148,7 +152,7 @@ describe('TelemetryManager', () => {
       expect(mockConfigManager.isEnabled).toHaveBeenCalled();
       expect(createClient).toHaveBeenCalledWith(
         TELEMETRY_BACKEND.URL,
-        TELEMETRY_BACKEND.ANON_KEY,
+        'registry-injected-test-key',
         expect.objectContaining({
           auth: {
             persistSession: false,
@@ -179,6 +183,18 @@ describe('TelemetryManager', () => {
       // Clean up
       delete process.env.SUPABASE_URL;
       delete process.env.SUPABASE_ANON_KEY;
+    });
+
+    it('should fail closed when registry injection is absent', () => {
+      delete process.env.SUPABASE_URL;
+      delete process.env.SUPABASE_ANON_KEY;
+
+      TelemetryManager.resetInstance();
+      manager = TelemetryManager.getInstance();
+      manager.trackEvent('test', {});
+
+      expect(createClient).not.toHaveBeenCalled();
+      expect(mockBatchProcessor.start).not.toHaveBeenCalled();
     });
 
     it('should not initialize when disabled', () => {
@@ -604,7 +620,7 @@ describe('TelemetryManager', () => {
     it('should configure Supabase client with correct options', () => {
       expect(createClient).toHaveBeenCalledWith(
         TELEMETRY_BACKEND.URL,
-        TELEMETRY_BACKEND.ANON_KEY,
+        'registry-injected-test-key',
         {
           auth: {
             persistSession: false,

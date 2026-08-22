@@ -73,8 +73,10 @@ export class EarlyErrorLogger {
    */
   private async initialize(): Promise<void> {
     try {
-      // Validate backend configuration before using
-      if (!TELEMETRY_BACKEND.URL || !TELEMETRY_BACKEND.ANON_KEY) {
+      const supabaseUrl = process.env.SUPABASE_URL || TELEMETRY_BACKEND.URL;
+      const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || TELEMETRY_BACKEND.ANON_KEY;
+      // Validate registry-injected backend configuration before using.
+      if (!supabaseUrl || !supabaseAnonKey) {
         logger.debug('Telemetry backend not configured, early error logger disabled');
         this.enabled = false;
         return;
@@ -92,8 +94,8 @@ export class EarlyErrorLogger {
 
       // Initialize Supabase client for direct inserts
       this.supabase = createClient(
-        TELEMETRY_BACKEND.URL,
-        TELEMETRY_BACKEND.ANON_KEY,
+        supabaseUrl,
+        supabaseAnonKey,
         {
           auth: {
             persistSession: false,

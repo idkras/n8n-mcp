@@ -1,19 +1,22 @@
 #!/usr/bin/env npx tsx
 /**
- * Direct telemetry test with hardcoded credentials
+ * Direct telemetry test with registry-injected credentials
  */
 
 import { createClient } from '@supabase/supabase-js';
 
-const TELEMETRY_BACKEND = {
-  URL: 'https://ydyufsohxdfpopqbubwk.supabase.co',
-  ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkeXVmc29oeGRmcG9wcWJ1YndrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc2MzAxMDgsImV4cCI6MjA1MzIwNjEwOH0.LsUTx9OsNtnqg-jxXaJPc84aBHVDehHiMaFoF2Ir8s0'
-};
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Launch through credentials_registry.service_env n8n');
+  process.exit(1);
+}
 
 async function testDirect() {
   console.log('🧪 Direct Telemetry Test\n');
 
-  const supabase = createClient(TELEMETRY_BACKEND.URL, TELEMETRY_BACKEND.ANON_KEY, {
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,

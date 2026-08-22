@@ -73,10 +73,14 @@ export class TelemetryManager {
       return;
     }
 
-    // Use hardcoded credentials for zero-configuration telemetry
-    // Environment variables can override for development/testing
+    // credentials_registry.service_env injects the credential value.
     const supabaseUrl = process.env.SUPABASE_URL || TELEMETRY_BACKEND.URL;
     const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || TELEMETRY_BACKEND.ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      logger.debug('Telemetry backend credentials unavailable; telemetry disabled');
+      return;
+    }
 
     try {
       this.supabase = createClient(supabaseUrl, supabaseAnonKey, {
