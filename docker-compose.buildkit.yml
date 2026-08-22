@@ -4,7 +4,7 @@ version: '3.8'
 
 x-heroes-credentials-launcher:
   required: true
-  command: python3 -m heroes_platform.credentials.service_env n8n docker compose -f docker-compose.buildkit.yml up
+  command: python3 -m credentials_registry.service_env n8n docker compose -f docker-compose.buildkit.yml up
 
 services:
   n8n-mcp:
@@ -26,9 +26,9 @@ services:
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
     environment:
-      - HEROES_CREDENTIALS_INJECTED=${HEROES_CREDENTIALS_INJECTED:?launch through heroes_platform.credentials.service_env}
+      - HEROES_CREDENTIALS_INJECTED=${HEROES_CREDENTIALS_INJECTED:?launch through credentials_registry.service_env}
       - MCP_MODE=${MCP_MODE:-http}
-      - AUTH_TOKEN=${AUTH_TOKEN:?injected by heroes_platform.credentials.service_env n8n}
+      - AUTH_TOKEN=${AUTH_TOKEN:?injected by credentials_registry.service_env n8n}
       - NODE_ENV=${NODE_ENV:-production}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - PORT=${PORT:-3000}

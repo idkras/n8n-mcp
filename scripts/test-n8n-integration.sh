@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 if [ "${HEROES_CREDENTIALS_INJECTED:-}" != "1" ]; then
     exec env PYTHONPATH="${WORKSPACE_ROOT}${PYTHONPATH:+:${PYTHONPATH}}" \
-        python3 -m heroes_platform.credentials.service_env n8n \
+        python3 -m credentials_registry.service_env n8n \
         env HEROES_CREDENTIALS_INJECTED=1 "$0" "$@"
 fi
 
@@ -17,7 +17,7 @@ if [ "${1:-}" == "--help" ] || [ "${1:-}" == "-h" ]; then
     echo ""
     echo "Options:"
     echo "  -h, --help           Show this help message"
-    echo "N8N credentials are resolved through heroes_platform.credentials.service_env."
+    echo "N8N credentials are resolved through credentials_registry.service_env."
     exit 0
 fi
 
@@ -37,7 +37,7 @@ AUTH_TOKEN="test-token-for-n8n-testing-minimum-32-chars"
 
 # n8n data directory for persistence
 N8N_DATA_DIR="$HOME/.n8n-mcp-test"
-# N8N_API_KEY is injected by heroes_platform.credentials.service_env.
+# N8N_API_KEY is injected by credentials_registry.service_env.
 
 # Function to detect OS
 detect_os() {

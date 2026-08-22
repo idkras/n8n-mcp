@@ -298,7 +298,7 @@ describe('registry-backed compose launcher contract', () => {
     expect(compose).toContain('x-heroes-credentials-launcher:');
     expect(compose).toContain('required: true');
     expect(compose).toContain(
-      'python3 -m heroes_platform.credentials.service_env n8n docker compose',
+      'python3 -m credentials_registry.service_env n8n docker compose',
     );
     expect(compose).toMatch(
       /HEROES_CREDENTIALS_INJECTED(?:=|: ")\$\{HEROES_CREDENTIALS_INJECTED:\?launch through heroes_platform\.credentials\.service_env\}/,
