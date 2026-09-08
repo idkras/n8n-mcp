@@ -301,7 +301,7 @@ describe('registry-backed compose launcher contract', () => {
       'python3 -m credentials_registry.service_env n8n docker compose',
     );
     expect(compose).toMatch(
-      /HEROES_CREDENTIALS_INJECTED(?:=|: ")\$\{HEROES_CREDENTIALS_INJECTED:\?launch through heroes_platform\.credentials\.service_env\}/,
+      /HEROES_CREDENTIALS_INJECTED(?:=|: ")\$\{HEROES_CREDENTIALS_INJECTED:\?launch through credentials_registry\.service_env\}/,
     );
   });
 
