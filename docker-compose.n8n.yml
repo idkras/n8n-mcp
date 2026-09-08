@@ -1,5 +1,9 @@
 version: '3.8'
 
+x-heroes-credentials-launcher:
+  required: true
+  command: python3 -m credentials_registry.service_env n8n docker compose -f docker-compose.n8n.yml up
+
 services:
   # n8n workflow automation
   n8n:
@@ -9,14 +13,15 @@ services:
     ports:
       - "${N8N_PORT:-5678}:5678"
     environment:
+      - HEROES_CREDENTIALS_INJECTED=${HEROES_CREDENTIALS_INJECTED:?launch through credentials_registry.service_env}
       - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE:-true}
       - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
-      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:-password}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:?injected by credentials_registry.service_env n8n}
       - N8N_HOST=${N8N_HOST:-localhost}
       - N8N_PORT=5678
       - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
       - WEBHOOK_URL=${N8N_WEBHOOK_URL:-http://localhost:5678/}
-      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:?injected by credentials_registry.service_env n8n}
     volumes:
       - n8n_data:/home/node/.n8n
     networks:
@@ -39,14 +44,15 @@ services:
     ports:
       - "${MCP_PORT:-3000}:${MCP_PORT:-3000}"
     environment:
+      - HEROES_CREDENTIALS_INJECTED=${HEROES_CREDENTIALS_INJECTED:?launch through credentials_registry.service_env}
       - NODE_ENV=production
       - N8N_MODE=true
       - MCP_MODE=http
       - PORT=${MCP_PORT:-3000}
       - N8N_API_URL=http://n8n:5678
-      - N8N_API_KEY=${N8N_API_KEY}
-      - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN}
-      - AUTH_TOKEN=${MCP_AUTH_TOKEN}
+      - N8N_API_KEY=${N8N_API_KEY:?injected by credentials_registry.service_env n8n}
+      - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN:?injected by credentials_registry.service_env n8n}
+      - AUTH_TOKEN=${MCP_AUTH_TOKEN:?injected by credentials_registry.service_env n8n}
       - LOG_LEVEL=${LOG_LEVEL:-info}
     volumes:
       - ./data:/app/data:ro

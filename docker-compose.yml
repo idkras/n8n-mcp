@@ -2,6 +2,10 @@
 # For optimized builds with BuildKit, use: docker-compose -f docker-compose.buildkit.yml up
 version: '3.8'
 
+x-heroes-credentials-launcher:
+  required: true
+  command: python3 -m credentials_registry.service_env n8n docker compose up
+
 services:
   n8n-mcp:
     image: ghcr.io/czlonkowski/n8n-mcp:latest
@@ -10,6 +14,7 @@ services:
     
     # Environment configuration
     environment:
+      HEROES_CREDENTIALS_INJECTED: "${HEROES_CREDENTIALS_INJECTED:?launch through credentials_registry.service_env}"
       # Mode configuration
       MCP_MODE: ${MCP_MODE:-http}
       # NOTE: USE_FIXED_HTTP is deprecated. SingleSessionHTTPServer is now the default.
